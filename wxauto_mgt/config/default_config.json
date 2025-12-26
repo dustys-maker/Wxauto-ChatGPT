@@ -1,0 +1,31 @@
+{
+  "app": {
+    "name": "WxAuto管理程序",
+    "version": "2.0.0",
+    "log_level": "INFO",
+    "ui_theme": "default",
+    "use_temp_dir_for_downloads": false
+  },
+  "message_listener": {
+    "poll_interval": 5,
+    "max_listeners": 30,
+    "listener_timeout_minutes": 30,
+    "auto_start": true
+  },
+  "status_monitor": {
+    "check_interval": 60
+  },
+  "db": {
+    "path": "./data/wxauto_mgt.db",
+    "auto_clean_messages": true,
+    "retention_days": 7
+  },
+  "system": {
+    "web_service": {
+      "host": "0.0.0.0",
+      "port": 8080,
+      "auto_start": true
+    }
+  },
+  "instances": []
+}
