@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block head %}
+<style>
+    .instance-card {
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        margin-bottom: 16px;
+        transition: all 0.3s ease;
+        border: 1px solid #e9ecef;
+        overflow: hidden;
+    }
+    .instance-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    }
+    .instance-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        border-bottom: 1px solid #f1f3f4;
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    }
+    .instance-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0;
+        color: #2c3e50;
+    }
+    .instance-status {
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .status-online {
+        background: linear-gradient(135deg, #d4edda, #c3e6cb);
+        color: #155724;
+        box-shadow: 0 2px 4px rgba(21, 87, 36, 0.2);
+    }
+    .status-offline {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        color: #6c757d;
+        box-shadow: 0 2px 4px rgba(108, 117, 125, 0.2);
+    }
+    .status-error {
+        background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+        color: #721c24;
+        box-shadow: 0 2px 4px rgba(114, 28, 36, 0.2);
+    }
+    .status-disabled {
+        background: linear-gradient(135deg, #e2e3e5, #d6d8db);
+        color: #383d41;
+        box-shadow: 0 2px 4px rgba(56, 61, 65, 0.2);
+    }
+    .metric-container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        padding: 12px 16px;
+        background-color: #fafbfc;
+    }
+    .metric-box {
+        padding: 8px 12px;
+        background: linear-gradient(135deg, #ffffff, #f8f9fa);
+        border-radius: 8px;
+        text-align: center;
+        border: 1px solid #e9ecef;
+        transition: all 0.2s ease;
+    }
+    .metric-box:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    .metric-value {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 2px;
+        line-height: 1.2;
+    }
+    .metric-label {
+        font-size: 0.7rem;
+        color: #6c757d;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .instance-info {
+        padding: 8px 16px;
+        background-color: #f8f9fa;
+        border-top: 1px solid #e9ecef;
+        font-size: 0.8rem;
+    }
+    .instance-info p {
+        margin: 2px 0;
+        color: #6c757d;
+    }
+    .instance-info strong {
+        color: #495057;
+        font-weight: 600;
+    }
+    .instance-actions {
+        padding: 10px 16px;
+        border-top: 1px solid #e9ecef;
+        display: flex;
+        justify-content: flex-end;
+        gap: 6px;
+        background-color: #ffffff;
+    }
+    .instance-actions .btn {
+        font-size: 0.75rem;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-weight: 500;
+    }
+    .refresh-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 10;
+    }
+
+    /* 响应式设计 */
+    @media (max-width: 768px) {
+        .metric-container {
+            grid-template-columns: 1fr;
+            gap: 6px;
+            padding: 8px 12px;
+        }
+
+        .metric-box {
+            padding: 6px 8px;
+        }
+
+        .metric-value {
+            font-size: 1rem;
+        }
+
+        .metric-label {
+            font-size: 0.65rem;
+        }
+
+        .instance-actions {
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .instance-actions .btn {
+            font-size: 0.7rem;
+            padding: 3px 6px;
+        }
+    }
+
+    @media (min-width: 1200px) {
+        .metric-container {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <div>
+                <h2>实例管理</h2>
+                <p class="text-muted">管理wxauto实例</p>
+            </div>
+            <div>
+                <button id="refresh-instances" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-sync-alt"></i> 刷新
+                </button>
+                <button id="add-instance" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> 添加实例
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 实例列表 -->
+    <div class="row" id="instances-container">
+        <div class="col-12 text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">加载中...</span>
+            </div>
+            <p class="mt-2">加载实例列表...</p>
+        </div>
+    </div>
+</div>
+
+<!-- 添加/编辑实例模态框 -->
+<div class="modal fade" id="instanceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="instanceModalTitle">添加实例</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="instanceForm">
+                    <input type="hidden" id="instance-id">
+                    <div class="mb-3">
+                        <label for="instance-name" class="form-label">实例名称</label>
+                        <input type="text" class="form-control" id="instance-name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="instance-base-url" class="form-label">API地址</label>
+                        <input type="text" class="form-control" id="instance-base-url" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="instance-api-key" class="form-label">API密钥</label>
+                        <input type="text" class="form-control" id="instance-api-key">
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="instance-enabled" checked>
+                        <label class="form-check-label" for="instance-enabled">
+                            启用实例
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="save-instance">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 确认删除模态框 -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">确认删除</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>确定要删除实例 <span id="delete-instance-name" class="fw-bold"></span> 吗？</p>
+                <p class="text-danger">此操作不可逆，删除后将无法恢复。</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-danger" id="confirm-delete">删除</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', path='/js/pages/instances.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,643 @@
+/**
+ * 全局样式
+ */
+
+/* 页面布局 */
+html, body {
+    height: 100%;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    background-color: #f8f9fa;
+}
+
+.container-fluid {
+    flex: 1 0 auto;
+    padding-bottom: 0; /* 移除底部padding避免空白 */
+}
+
+.footer {
+    flex-shrink: 0;
+}
+
+/* 导航栏美化样式 */
+.custom-navbar {
+    padding: 0;
+    height: 56px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    z-index: 1030 !important;
+    position: relative;
+}
+
+.custom-navbar .navbar-brand {
+    font-size: 1.4rem;
+    font-weight: 600;
+    padding: 0 20px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+}
+
+.custom-navbar .navbar-nav {
+    height: 56px;
+}
+
+.custom-navbar .nav-item {
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.custom-navbar .nav-link {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.custom-navbar .nav-link i {
+    font-size: 1.2rem;
+    margin-right: 8px;
+}
+
+/* 悬停效果 */
+.custom-navbar .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+/* 点击效果 */
+.custom-navbar .nav-link:active {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: scale(0.98);
+}
+
+/* 选中效果 */
+.custom-navbar .nav-link.active {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    font-weight: 500;
+}
+
+.custom-navbar .nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background-color: #1890ff;
+}
+
+/* 卡片样式 */
+.card {
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+}
+
+.card-header {
+    border-radius: 8px 8px 0 0 !important;
+    font-weight: 500;
+}
+
+/* 表格样式 */
+.table th {
+    background-color: #f8f9fa;
+    font-weight: 500;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+/* 状态指示器 */
+.status-indicator {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.status-online {
+    background-color: #28a745;
+}
+
+.status-offline {
+    background-color: #6c757d;
+}
+
+.status-error {
+    background-color: #dc3545;
+}
+
+/* 通知样式 */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1050;
+    min-width: 300px;
+    max-width: 500px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 按钮样式 */
+.btn-icon {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.btn-action {
+    margin-right: 5px;
+}
+
+/* 加载动画 */
+.spinner-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+}
+
+/* 仪表盘消息状态样式 */
+.message-status-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    align-items: center;
+}
+
+.message-status-badges .badge {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.4rem;
+    white-space: nowrap;
+}
+
+/* 首页消息项样式 */
+#recent-messages .message-item {
+    margin-bottom: 1rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+#recent-messages .message-item:last-child {
+    border-bottom: none;
+}
+
+/* 首页用户消息气泡样式 - 简化版 */
+#recent-messages .user-bubble {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    border-radius: 12px;
+    padding: 0.5rem 0.75rem;
+    max-width: 100%;
+    box-shadow: 0 1px 4px rgba(0, 123, 255, 0.2);
+    font-size: 0.875rem;
+}
+
+#recent-messages .message-status-row {
+    margin-top: 0.25rem;
+    display: flex;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+#recent-messages .message-status-row .badge {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.3rem;
+}
+
+.log-entry {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.log-entry:last-child {
+    border-bottom: none;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .card-title {
+        font-size: 1.1rem;
+    }
+
+    .status-value {
+        font-size: 1.2rem;
+    }
+
+    .notification {
+        min-width: auto;
+        max-width: 90%;
+        left: 5%;
+        right: 5%;
+    }
+
+    .message-status-badges {
+        margin-top: 0.25rem;
+        justify-content: flex-start;
+    }
+
+    .message-status-badges .badge {
+        font-size: 0.6rem;
+        padding: 0.15rem 0.3rem;
+    }
+
+    /* 移动端导航栏优化 */
+    .navbar {
+        z-index: 1030 !important;
+        position: relative;
+    }
+
+    .navbar-collapse {
+        z-index: 9999 !important;
+        position: relative;
+        background-color: #343a40 !important;
+        border-radius: 0 0 8px 8px;
+        margin-top: 1px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .navbar-nav {
+        padding: 10px 0;
+    }
+
+    .navbar .nav-item {
+        width: 100% !important;
+        height: auto !important;
+        display: block !important;
+    }
+
+    .navbar .nav-link {
+        color: #fff !important;
+        padding: 12px 20px !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        height: auto !important;
+        display: flex !important;
+        align-items: center !important;
+        white-space: nowrap;
+        width: 100%;
+        font-size: 1rem !important;
+    }
+
+    .navbar .nav-link i {
+        font-size: 1.1rem !important;
+        margin-right: 10px !important;
+        min-width: 20px;
+        text-align: center;
+    }
+
+    .navbar .nav-link:hover {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        color: #fff !important;
+    }
+
+    .navbar .nav-link.active {
+        background-color: rgba(24, 144, 255, 0.2) !important;
+        color: #fff !important;
+        border-left: 3px solid #1890ff;
+    }
+
+    .navbar .nav-link.active::after {
+        display: none !important;
+    }
+
+    .navbar-toggler {
+        border: none;
+        padding: 0.25rem 0.5rem;
+        z-index: 1031;
+    }
+
+    .navbar-toggler:focus {
+        box-shadow: none;
+    }
+
+    /* 移动端表格优化 */
+    .table-responsive {
+        font-size: 0.9rem;
+    }
+
+    .table th,
+    .table td {
+        padding: 0.5rem 0.25rem;
+        vertical-align: middle;
+    }
+
+    /* 移动端按钮优化 */
+    .btn-group-sm > .btn,
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    /* 移动端模态框优化 */
+    .modal-dialog {
+        margin: 0.5rem;
+    }
+
+    .modal-header {
+        padding: 0.75rem 1rem;
+    }
+
+    .modal-body {
+        padding: 1rem;
+    }
+
+    .modal-footer {
+        padding: 0.75rem 1rem;
+    }
+}
+
+/* 消息相关样式 */
+.message-item {
+    margin-bottom: 1.5rem;
+    padding: 1rem 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.message-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 0 0.5rem;
+    box-sizing: border-box;
+    position: relative;
+}
+
+/* 用户消息样式 */
+.user-message-wrapper {
+    align-items: flex-end;
+}
+
+.user-bubble {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    border-radius: 18px 18px 4px 18px;
+    max-width: 60%;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+    position: relative;
+    margin-left: auto;
+}
+
+.user-bubble::before {
+    content: "👤 用户消息";
+    position: absolute;
+    top: -20px;
+    right: 0;
+    font-size: 0.7rem;
+    color: #007bff;
+    font-weight: bold;
+}
+
+/* 系统消息样式 */
+.system-message-wrapper {
+    align-items: flex-start;
+}
+
+.system-bubble {
+    background: #f8f9fa;
+    color: #495057;
+    border: 1px solid #e9ecef;
+    border-radius: 18px 18px 18px 4px;
+    max-width: 60%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: relative;
+    margin-right: auto;
+}
+
+.system-bubble::before {
+    content: "🤖 系统消息";
+    position: absolute;
+    top: -20px;
+    left: 0;
+    font-size: 0.7rem;
+    color: #6c757d;
+    font-weight: bold;
+}
+
+/* 消息气泡通用样式 */
+.message-bubble {
+    padding: 0.75rem 1rem;
+    word-wrap: break-word;
+    position: relative;
+}
+
+.message-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.message-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    opacity: 0.8;
+}
+
+.message-sender {
+    font-weight: bold;
+}
+
+.user-bubble .message-sender {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.system-bubble .message-sender {
+    color: #007bff;
+}
+
+.message-time {
+    font-size: 0.75rem;
+    opacity: 0.7;
+}
+
+.user-bubble .message-time {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.system-bubble .message-time {
+    color: #6c757d;
+}
+
+.message-content {
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+/* 状态标签行 */
+.message-status-row {
+    margin-top: 0.5rem;
+    display: flex;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+}
+
+.user-message-wrapper .message-status-row {
+    justify-content: flex-end;
+}
+
+.system-message-wrapper .message-status-row {
+    justify-content: flex-start;
+}
+
+.message-status-row .badge {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+}
+
+/* AI回复样式 */
+.message-reply {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    border-radius: 18px 18px 18px 4px;
+    padding: 0.75rem 1rem;
+    margin-top: 0.75rem;
+    max-width: 60%;
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+    position: relative;
+}
+
+.user-message-wrapper .message-reply {
+    align-self: flex-start;
+    margin-right: auto;
+}
+
+.message-reply::before {
+    content: "🤖 AI回复";
+    position: absolute;
+    top: -20px;
+    left: 0;
+    font-size: 0.7rem;
+    color: #28a745;
+    font-weight: bold;
+}
+
+.reply-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.reply-label {
+    font-size: 0.875rem;
+    font-weight: bold;
+    opacity: 0.9;
+}
+
+.reply-time {
+    font-size: 0.75rem;
+    opacity: 0.7;
+}
+
+.reply-content {
+    white-space: pre-wrap;
+    line-height: 1.5;
+}
+
+/* 图片和文件样式 */
+.message-image-content {
+    max-width: 200px;
+    max-height: 200px;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    margin-top: 0.5rem;
+}
+
+.message-file-link {
+    color: inherit;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.user-bubble .message-file-link {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.system-bubble .message-file-link {
+    background: rgba(0, 123, 255, 0.1);
+    color: #007bff;
+}
+
+.message-file-link:hover {
+    background: rgba(255, 255, 255, 0.3);
+    text-decoration: none;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .user-bubble,
+    .system-bubble {
+        max-width: 80%;
+    }
+
+    .message-reply {
+        max-width: 80%;
+    }
+
+    .message-wrapper {
+        padding: 0 0.25rem;
+    }
+
+    .user-bubble::before,
+    .system-bubble::before,
+    .message-reply::before {
+        font-size: 0.6rem;
+    }
+}
+
+/* 监听对象列表样式 */
+.listener-item {
+    padding: 0.75rem;
+    border-bottom: 1px solid #e9ecef;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.listener-item:hover {
+    background-color: #f8f9fa;
+}
+
+.listener-item.active {
+    background-color: #e3f2fd;
+    border-left: 3px solid #007bff;
+}
+
+/* 空状态样式 */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #6c757d;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state p {
+    font-size: 1.1rem;
+    margin: 0;
+}
