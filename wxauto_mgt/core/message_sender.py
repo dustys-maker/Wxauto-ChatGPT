@@ -34,7 +34,15 @@ class MessageSender:
         self._initialized = True
         logger.info("消息发送器初始化完成")
 
-    async def send_message(self, instance_id: str, chat_name: str, content: str, message_send_mode: str = None, at_list: List[str] = None) -> Tuple[bool, str]:
+    async def send_message(
+        self,
+        instance_id: str,
+        chat_name: str,
+        content: str,
+        message_send_mode: str = None,
+        at_list: List[str] = None,
+        chat_key: Optional[str] = None
+    ) -> Tuple[bool, str]:
         """
         发送消息到微信实例
 
@@ -44,6 +52,7 @@ class MessageSender:
             content: 消息内容
             message_send_mode: 消息发送模式，可选值为"normal"或"typing"，默认为None（使用平台配置）
             at_list: 要@的用户列表，默认为None
+            chat_key: 聊天唯一键，优先用于区分群聊/单聊
 
         Returns:
             Tuple[bool, str]: (是否成功, 错误信息)
@@ -66,10 +75,18 @@ class MessageSender:
         if message_send_mode is None:
             try:
                 # 查询消息对应的平台ID
-                message_platform = await db_manager.fetchone(
-                    "SELECT platform_id FROM messages WHERE instance_id = ? AND chat_name = ? ORDER BY create_time DESC LIMIT 1",
-                    (instance_id, chat_name)
-                )
+                message_platform = None
+                if chat_key:
+                    message_platform = await db_manager.fetchone(
+                        "SELECT platform_id FROM messages WHERE instance_id = ? AND chat_key = ? ORDER BY create_time DESC LIMIT 1",
+                        (instance_id, chat_key)
+                    )
+
+                if not message_platform:
+                    message_platform = await db_manager.fetchone(
+                        "SELECT platform_id FROM messages WHERE instance_id = ? AND chat_name = ? ORDER BY create_time DESC LIMIT 1",
+                        (instance_id, chat_name)
+                    )
 
                 if message_platform and message_platform.get('platform_id'):
                     platform_id = message_platform.get('platform_id')

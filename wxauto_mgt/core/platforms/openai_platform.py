@@ -15,6 +15,7 @@ from typing import Dict, Any
 
 from .base_platform import ServicePlatform
 from wxauto_mgt.data.db_manager import db_manager
+from wxauto_mgt.utils.chat_identity import get_chat_identity
 
 # 导入标准日志记录器
 logger = logging.getLogger('wxauto_mgt')
@@ -270,15 +271,27 @@ class OpenAIPlatform(ServicePlatform):
             return []
 
         try:
+            chat_key = message.get('chat_key')
+            if not chat_key:
+                chat_type, chat_key = get_chat_identity(
+                    chat_name,
+                    message.get('sender'),
+                    message.get('sender_remark')
+                )
+
             history = await db_manager.fetchall(
                 """
                 SELECT content, reply_content
                 FROM messages
-                WHERE instance_id = ? AND chat_name = ? AND platform_id = ? AND reply_status = 1
+                WHERE instance_id = ? AND platform_id = ? AND reply_status = 1
+                  AND (
+                        (chat_key IS NOT NULL AND chat_key != '' AND chat_key = ?)
+                        OR ((chat_key IS NULL OR chat_key = '') AND chat_name = ?)
+                  )
                 ORDER BY create_time DESC
                 LIMIT ?
                 """,
-                (instance_id, chat_name, self.platform_id, self.history_limit)
+                (instance_id, self.platform_id, chat_key, chat_name, self.history_limit)
             )
         except Exception as e:
             logger.error(f"加载历史记录失败: {e}")
