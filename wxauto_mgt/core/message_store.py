@@ -10,6 +10,7 @@ import time
 from typing import Dict, List, Optional, Any
 
 from ..data.db_manager import db_manager
+from ..utils.chat_identity import get_chat_identity
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +38,8 @@ class MessageStore:
                 'instance_id': instance_id,
                 'message_id': message.get('message_id'),
                 'chat_name': message.get('chat_name'),
+                'chat_type': message.get('chat_type'),
+                'chat_key': message.get('chat_key'),
                 'message_type': message.get('message_type'),
                 'content': message.get('content'),
                 'sender': message.get('sender'),
@@ -45,6 +48,15 @@ class MessageStore:
                 'processed': 0,
                 'create_time': int(time.time())
             }
+
+            if not message_data.get('chat_type') or not message_data.get('chat_key'):
+                chat_type, chat_key = get_chat_identity(
+                    message_data.get('chat_name'),
+                    message_data.get('sender'),
+                    message_data.get('sender_remark')
+                )
+                message_data.setdefault('chat_type', chat_type)
+                message_data.setdefault('chat_key', chat_key)
             
             # 保存到数据库
             await db_manager.insert('messages', message_data)

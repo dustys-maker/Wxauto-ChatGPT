@@ -22,6 +22,7 @@ from wxauto_mgt.core.api_client import instance_manager
 from wxauto_mgt.data.db_manager import db_manager
 from wxauto_mgt.core.config_notifier import config_notifier, ConfigChangeEvent
 from wxauto_mgt.core.service_monitor import service_monitor
+from wxauto_mgt.utils.chat_identity import get_chat_identity
 
 # 配置日志 - 使用主日志记录器，确保所有日志都记录到主日志文件
 logger = logging.getLogger('wxauto_mgt')
@@ -413,9 +414,16 @@ class MessageListener:
                     # 只有成功添加监听对象后，才保存消息到数据库
                     if add_success:
                         # 保存消息到数据库
+                        chat_type, chat_key = get_chat_identity(
+                            chat_name,
+                            processed_msg.get('sender'),
+                            processed_msg.get('sender_remark')
+                        )
                         save_data = {
                             'instance_id': instance_id,
                             'chat_name': chat_name,
+                            'chat_type': chat_type,
+                            'chat_key': chat_key,
                             'message_type': processed_msg.get('type'),
                             'content': processed_msg.get('content'),
                             'sender': processed_msg.get('sender'),
@@ -621,9 +629,16 @@ class MessageListener:
                             processed_msg = await message_processor.process_message(msg, api_client)
 
                             # 保存消息到数据库
+                            chat_type, chat_key = get_chat_identity(
+                                who,
+                                processed_msg.get('sender'),
+                                processed_msg.get('sender_remark')
+                            )
                             save_data = {
                                 'instance_id': instance_id,
                                 'chat_name': who,
+                                'chat_type': chat_type,
+                                'chat_key': chat_key,
                                 'message_type': processed_msg.get('type'),
                                 'content': processed_msg.get('content'),
                                 'sender': processed_msg.get('sender'),
@@ -1105,9 +1120,16 @@ class MessageListener:
                                     processed_msg = await message_processor.process_message(msg, api_client)
 
                                     # 保存消息到数据库
+                                    chat_type, chat_key = get_chat_identity(
+                                        who,
+                                        processed_msg.get('sender'),
+                                        processed_msg.get('sender_remark')
+                                    )
                                     save_data = {
                                         'instance_id': instance_id,
                                         'chat_name': who,
+                                        'chat_type': chat_type,
+                                        'chat_key': chat_key,
                                         'message_type': processed_msg.get('type', 'text'),
                                         'content': processed_msg.get('content', ''),
                                         'sender': processed_msg.get('sender', ''),
@@ -1193,12 +1215,13 @@ class MessageListener:
             instance_id = message_data.get('instance_id', '')
             chat_name = message_data.get('chat_name', '')
             content = message_data.get('content', '')
+            sender = message_data.get('sender', '')
+            sender_remark = message_data.get('sender_remark', '')
 
             # 记录详细的消息信息，便于调试
             logger.info(f"准备保存消息: ID={message_id}, 实例={instance_id}, 聊天={chat_name}, 内容={content[:50]}...")
 
             # 直接检查sender是否为self（不区分大小写）
-            sender = message_data.get('sender', '')
             if sender and (sender.lower() == 'self' or sender == 'Self'):
                 logger.info(f"_save_message直接过滤掉self发送的消息: {message_id}")
                 return ""  # 返回空字符串表示消息被过滤
@@ -1208,6 +1231,12 @@ class MessageListener:
             if msg_type and (msg_type.lower() in ['self', 'base'] or msg_type in ['Self', 'Base']):
                 logger.info(f"_save_message直接过滤掉{msg_type}类型的消息: {message_id}")
                 return ""  # 返回空字符串表示消息被过滤
+
+            # 补充聊天身份信息，避免群聊/单聊历史混淆
+            if not message_data.get('chat_type') or not message_data.get('chat_key'):
+                chat_type, chat_key = get_chat_identity(chat_name, sender, sender_remark)
+                message_data.setdefault('chat_type', chat_type)
+                message_data.setdefault('chat_key', chat_key)
 
             # 使用统一的消息过滤模块进行二次检查
             from wxauto_mgt.core.message_filter import message_filter
@@ -2097,9 +2126,16 @@ class MessageListener:
                                 processed_msg = await message_processor.process_message(msg, api_client)
 
                                 # 保存消息到数据库
+                                chat_type, chat_key = get_chat_identity(
+                                    who,
+                                    processed_msg.get('sender'),
+                                    processed_msg.get('sender_remark')
+                                )
                                 save_data = {
                                     'instance_id': instance_id,
                                     'chat_name': who,
+                                    'chat_type': chat_type,
+                                    'chat_key': chat_key,
                                     'message_type': processed_msg.get('type', 'text'),
                                     'content': processed_msg.get('content', ''),
                                     'sender': processed_msg.get('sender', ''),

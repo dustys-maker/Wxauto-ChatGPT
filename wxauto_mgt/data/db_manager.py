@@ -141,6 +141,25 @@ class DBManager:
             else:
                 logger.debug("listeners表已有conversation_id字段")
 
+            # 检查messages表是否有chat_type/chat_key字段
+            messages_table_info = await self._get_table_structure('messages')
+            messages_columns = {col["name"] for col in messages_table_info}
+
+            if 'chat_type' not in messages_columns:
+                logger.info("messages表缺少chat_type字段，正在添加...")
+                await self.execute("ALTER TABLE messages ADD COLUMN chat_type TEXT DEFAULT 'private'")
+                logger.info("成功添加chat_type字段到messages表")
+            else:
+                logger.debug("messages表已有chat_type字段")
+
+            if 'chat_key' not in messages_columns:
+                logger.info("messages表缺少chat_key字段，正在添加...")
+                await self.execute("ALTER TABLE messages ADD COLUMN chat_key TEXT")
+                await self.execute("CREATE INDEX IF NOT EXISTS idx_messages_chat_key ON messages(chat_key)")
+                logger.info("成功添加chat_key字段到messages表")
+            else:
+                logger.debug("messages表已有chat_key字段")
+
         except Exception as e:
             logger.error(f"检查并更新表结构时出错: {str(e)}")
             logger.error(traceback.format_exc())
@@ -265,6 +284,8 @@ class DBManager:
             instance_id TEXT NOT NULL,
             message_id TEXT NOT NULL,
             chat_name TEXT NOT NULL,
+            chat_type TEXT DEFAULT 'private',
+            chat_key TEXT,
             message_type TEXT NOT NULL,
             content TEXT,
             sender TEXT,
@@ -293,6 +314,7 @@ class DBManager:
         conn.execute("CREATE INDEX IF NOT EXISTS idx_messages_delivery_status ON messages(delivery_status)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_messages_platform_id ON messages(platform_id)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_messages_reply_status ON messages(reply_status)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_messages_chat_key ON messages(chat_key)")
         logger.debug("创建messages表索引")
 
         # 服务平台表

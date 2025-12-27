@@ -15,6 +15,7 @@ from wxauto_mgt.data.db_manager import db_manager
 from wxauto_mgt.core.api_client import instance_manager
 from wxauto_mgt.core.service_platform_manager import platform_manager, rule_manager
 from wxauto_mgt.core.message_sender import message_sender
+from wxauto_mgt.utils.chat_identity import get_chat_identity, build_chat_key
 
 # 导入标准日志记录器 - 使用主日志记录器，确保所有日志都记录到主日志文件
 logger = logging.getLogger('wxauto_mgt')
@@ -236,6 +237,7 @@ class MessageDeliveryService:
             sql = """
             SELECT * FROM messages
             WHERE processed = 0 AND delivery_status IN (0, 2, 3)
+              AND (reply_status IS NULL OR reply_status != 1)
             ORDER BY create_time ASC
             LIMIT ?
             """
@@ -373,6 +375,7 @@ class MessageDeliveryService:
             sql = """
             SELECT * FROM messages
             WHERE instance_id = ? AND processed = 0 AND delivery_status IN (0, 2, 3)
+              AND (reply_status IS NULL OR reply_status != 1)
             ORDER BY create_time ASC
             LIMIT ?
             """
@@ -415,8 +418,17 @@ class MessageDeliveryService:
             now = int(time.time())
 
             for msg in messages:
-                # 创建分组键：实例ID_聊天对象
-                chat_key = f"{msg['instance_id']}_{msg['chat_name']}"
+                chat_type, inferred_key = get_chat_identity(
+                    msg.get('chat_name'),
+                    msg.get('sender'),
+                    msg.get('sender_remark')
+                )
+                chat_key = msg.get('chat_key') or inferred_key or build_chat_key(
+                    msg.get('chat_name'),
+                    chat_type
+                )
+                # 创建分组键：实例ID_聊天对象(含群聊/单聊区分)
+                chat_key = f"{msg['instance_id']}_{chat_key or msg.get('chat_name')}"
 
                 # 检查时间窗口
                 if chat_key not in grouped_messages:
@@ -466,6 +478,33 @@ class MessageDeliveryService:
             # 出错时返回原始消息
             return messages
 
+    async def _ensure_message_chat_identity(self, message: Dict[str, Any]) -> None:
+        """
+        确保消息包含chat_type/chat_key，并在数据库中补全。
+        """
+        if message.get('chat_type') and message.get('chat_key'):
+            return
+
+        chat_type, chat_key = get_chat_identity(
+            message.get('chat_name'),
+            message.get('sender'),
+            message.get('sender_remark')
+        )
+
+        message.setdefault('chat_type', chat_type)
+        message.setdefault('chat_key', chat_key)
+
+        message_id = message.get('message_id')
+        instance_id = message.get('instance_id')
+        if message_id and chat_key and instance_id:
+            try:
+                await db_manager.execute(
+                    "UPDATE messages SET chat_type = ?, chat_key = ? WHERE instance_id = ? AND message_id = ?",
+                    (chat_type, chat_key, instance_id, message_id)
+                )
+            except Exception as e:
+                logger.warning(f"补全消息聊天身份失败: {message_id}, 错误: {e}")
+
     async def process_message(self, message: Dict[str, Any]) -> bool:
         """
         处理单条消息（带超时机制）
@@ -514,6 +553,13 @@ class MessageDeliveryService:
         # 使用主日志记录器记录详细信息
         logger.info(f"开始处理消息: ID={message_id}, 实例={message.get('instance_id')}, 聊天={message.get('chat_name')}, 发送者={message.get('sender')}, 类型={message.get('mtype', '')}, 消息类型={message.get('message_type', '')}")
         logger.debug(f"消息内容: {message.get('content', '')[:100]}{'...' if len(message.get('content', '')) > 100 else ''}")
+
+        if message.get('reply_status') == 1:
+            logger.info(f"消息已回复，跳过重复处理: {message_id}")
+            await self._mark_as_processed(message)
+            return True
+
+        await self._ensure_message_chat_identity(message)
 
         # 如果是文件类型消息，记录文件信息
         if message.get('mtype') in ['image', 'file'] or message.get('file_type') in ['image', 'file']:
@@ -1313,7 +1359,8 @@ class MessageDeliveryService:
                 message['chat_name'],
                 reply_content,
                 message_send_mode,
-                at_list
+                at_list,
+                message.get('chat_key')
             )
 
             if not result:
