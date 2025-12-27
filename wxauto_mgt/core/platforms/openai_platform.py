@@ -14,6 +14,7 @@ import time
 from typing import Dict, Any
 
 from .base_platform import ServicePlatform
+from wxauto_mgt.data.db_manager import db_manager
 
 # 导入标准日志记录器
 logger = logging.getLogger('wxauto_mgt')
@@ -38,6 +39,14 @@ class OpenAIPlatform(ServicePlatform):
         self.temperature = config.get('temperature', 0.7)
         self.system_prompt = config.get('system_prompt', '你是一个有用的助手。')
         self.max_tokens = config.get('max_tokens', 1000)
+        self.continuous_conversation = config.get('continuous_conversation', False)
+        self.summary_prompt = config.get('summary_prompt', '请将以下对话历史精简为一条要点式总结，保留重要事实、偏好与未完成事项。')
+        history_limit = config.get('history_limit', 6)
+        try:
+            self.history_limit = int(history_limit)
+        except (TypeError, ValueError):
+            self.history_limit = 6
+        self.max_context_tokens = 4096
         # 消息发送模式已在父类中初始化
 
     async def initialize(self) -> bool:
@@ -77,14 +86,40 @@ class OpenAIPlatform(ServicePlatform):
         if not self._initialized:
             await self.initialize()
             if not self._initialized:
-                return {"error": "平台未初始化"}
+            return {"error": "平台未初始化"}
 
         try:
             # 构建消息历史
             messages = [
                 {"role": "system", "content": self.system_prompt},
-                {"role": "user", "content": message['content']}
             ]
+
+            if self.continuous_conversation:
+                history_messages = await self._load_history_messages(message)
+                if history_messages:
+                    messages.extend(history_messages)
+
+                    total_tokens = self._estimate_tokens(messages) + self._estimate_tokens(
+                        [{"role": "user", "content": message['content']}]
+                    )
+                    total_tokens += self.max_tokens
+
+                    if total_tokens > self.max_context_tokens:
+                        summary_message = await self._summarize_history(history_messages)
+                        if summary_message:
+                            messages = [
+                                {"role": "system", "content": self.system_prompt},
+                                summary_message,
+                            ]
+                            compact_tokens = self._estimate_tokens(messages)
+                            compact_tokens += self._estimate_tokens(
+                                [{"role": "user", "content": message['content']}]
+                            )
+                            compact_tokens += self.max_tokens
+                            if compact_tokens > self.max_context_tokens:
+                                messages = [{"role": "system", "content": self.system_prompt}]
+
+            messages.append({"role": "user", "content": message['content']})
 
             # 记录API调用详情
             logger.info(f"准备调用OpenAI API: URL={self.api_base}/chat/completions, 模型={self.model}")
@@ -149,6 +184,120 @@ class OpenAIPlatform(ServicePlatform):
         except Exception as e:
             logger.error(f"处理消息时出错: {e}")
             return {"error": str(e)}
+
+    def _estimate_tokens(self, messages: list) -> int:
+        """
+        简单估算tokens数量（近似）
+
+        Args:
+            messages: OpenAI消息列表
+
+        Returns:
+            int: 估算tokens数量
+        """
+        total_chars = 0
+        for msg in messages:
+            content = msg.get("content", "")
+            total_chars += len(content)
+        return max(1, total_chars // 4)
+
+    async def _summarize_history(self, history_messages: list) -> Dict[str, Any]:
+        """
+        将历史对话压缩为一条总结消息
+
+        Args:
+            history_messages: 历史消息列表
+
+        Returns:
+            Dict[str, Any]: 总结消息
+        """
+        try:
+            summary_messages = [
+                {"role": "system", "content": self.summary_prompt},
+            ]
+
+            summary_messages.extend(history_messages)
+
+            request_body = {
+                "model": self.model,
+                "messages": summary_messages,
+                "temperature": 0.2,
+                "max_tokens": min(512, self.max_tokens),
+            }
+
+            headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json"
+            }
+
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    f"{self.api_base}/chat/completions",
+                    headers=headers,
+                    json=request_body
+                ) as response:
+                    if response.status != 200:
+                        error_text = await response.text()
+                        logger.warning(f"OpenAI总结失败: 状态码={response.status}, 错误信息={error_text}")
+                        return {}
+
+                    result = await response.json()
+                    content = result.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+                    if not content:
+                        return {}
+
+                    return {"role": "assistant", "content": content}
+        except Exception as e:
+            logger.error(f"生成总结时出错: {e}")
+            return {}
+
+    async def _load_history_messages(self, message: Dict[str, Any]) -> list:
+        """
+        加载历史对话记录
+
+        Args:
+            message: 当前消息数据
+
+        Returns:
+            list: 历史消息列表
+        """
+        if self.history_limit <= 0:
+            return []
+
+        instance_id = message.get('instance_id')
+        chat_name = message.get('chat_name')
+        if not instance_id or not chat_name:
+            return []
+
+        try:
+            history = await db_manager.fetchall(
+                """
+                SELECT content, reply_content
+                FROM messages
+                WHERE instance_id = ? AND chat_name = ? AND platform_id = ? AND reply_status = 1
+                ORDER BY create_time DESC
+                LIMIT ?
+                """,
+                (instance_id, chat_name, self.platform_id, self.history_limit)
+            )
+        except Exception as e:
+            logger.error(f"加载历史记录失败: {e}")
+            return []
+
+        if not history:
+            return []
+
+        messages = []
+        for item in reversed(history):
+            user_content = (item.get('content') or '').strip()
+            reply_content = (item.get('reply_content') or '').strip()
+            if user_content:
+                messages.append({"role": "user", "content": user_content})
+            if reply_content:
+                messages.append({"role": "assistant", "content": reply_content})
+
+        logger.debug(f"OpenAI历史记录加载完成: {len(messages)} 条")
+        return messages
 
     async def test_connection(self) -> Dict[str, Any]:
         """
