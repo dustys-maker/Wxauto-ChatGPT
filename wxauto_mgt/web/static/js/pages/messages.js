@@ -825,13 +825,9 @@ async function deleteListener() {
 
     try {
         // 发送请求
-        const response = await fetchAPI('/api/listeners', {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                instance_id: currentListener.instance_id,
-                chat_name: currentListener.chat_name
-            })
+        const deleteUrl = `/api/listeners?instance_id=${encodeURIComponent(currentListener.instance_id)}&chat_name=${encodeURIComponent(currentListener.chat_name)}`;
+        const response = await fetchAPI(deleteUrl, {
+            method: 'DELETE'
         });
 
         // 检查响应
@@ -1563,7 +1559,6 @@ function escapeHtml(text) {
 }
 
 // 移动端交互功能已集成到抽屉系统中
-
 
 
 

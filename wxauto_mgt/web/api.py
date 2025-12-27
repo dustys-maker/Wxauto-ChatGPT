@@ -1428,12 +1428,22 @@ async def remove_listener(request: Request):
         # 验证认证
         await verify_request_auth(request)
 
-        data = await request.json()
+        data = {}
+        try:
+            data = await request.json()
+        except Exception:
+            data = {}
+
+        if not data:
+            data = {
+                "instance_id": request.query_params.get("instance_id", ""),
+                "chat_name": request.query_params.get("chat_name", "")
+            }
 
         # 验证必需字段
         required_fields = ['instance_id', 'chat_name']
         for field in required_fields:
-            if field not in data:
+            if field not in data or not data[field]:
                 raise HTTPException(status_code=400, detail=f"缺少必需字段: {field}")
 
         # 调用 Python 端的消息监听器
