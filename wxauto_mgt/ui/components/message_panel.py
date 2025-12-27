@@ -222,9 +222,13 @@ class QTextEditLogger(logging.Handler):
                     parts = msg.split(", ")
                     for part in parts:
                         if "实例=" in part:
-                            instance_id = part.split("=")[1]
+                            _, _, instance_value = part.partition("实例=")
+                            if instance_value:
+                                instance_id = instance_value.strip()
                         elif "聊天=" in part:
-                            chat_name = part.split("=")[1]
+                            _, _, chat_value = part.partition("聊天=")
+                            if chat_value:
+                                chat_name = chat_value.strip()
                 elif "成功添加实例" in msg:
                     # 格式: "成功添加实例 xxx 的监听对象: xxx"
                     import re
@@ -234,7 +238,9 @@ class QTextEditLogger(logging.Handler):
                         chat_name = match.group(2)
                 elif "成功添加监听对象" in msg:
                     # 格式: "成功添加监听对象: xxx"
-                    chat_name = msg.split("成功添加监听对象:")[1].strip()
+                    _, _, chat_value = msg.partition("成功添加监听对象:")
+                    if chat_value:
+                        chat_name = chat_value.strip()
 
                 # 如果能提取到聊天对象，使用它作为事件分组的键
                 if chat_name:
@@ -271,9 +277,13 @@ class QTextEditLogger(logging.Handler):
                     parts = msg.split(", ")
                     for part in parts:
                         if "实例=" in part:
-                            instance_id = part.split("=")[1]
+                            _, _, instance_value = part.partition("实例=")
+                            if instance_value:
+                                instance_id = instance_value.strip()
                         elif "聊天=" in part:
-                            chat_name = part.split("=")[1]
+                            _, _, chat_value = part.partition("聊天=")
+                            if chat_value:
+                                chat_name = chat_value.strip()
                 elif "已移除实例" in msg:
                     # 格式: "已移除实例 xxx 的监听对象: xxx"
                     import re
@@ -283,13 +293,19 @@ class QTextEditLogger(logging.Handler):
                         chat_name = match.group(2)
                 elif "成功移除监听对象:" in msg:
                     # 格式: "成功移除监听对象: xxx"
-                    chat_name = msg.split("成功移除监听对象:")[1].strip()
+                    _, _, chat_value = msg.partition("成功移除监听对象:")
+                    if chat_value:
+                        chat_name = chat_value.strip()
                 elif "成功超时移除监听对象:" in msg:
                     # 格式: "成功超时移除监听对象: xxx"
-                    chat_name = msg.split("成功超时移除监听对象:")[1].strip()
+                    _, _, chat_value = msg.partition("成功超时移除监听对象:")
+                    if chat_value:
+                        chat_name = chat_value.strip()
                 elif "成功移除监听对象 " in msg:
                     # 格式: "成功移除监听对象 xxx"
-                    chat_name = msg.split("成功移除监听对象 ")[1].strip()
+                    _, _, chat_value = msg.partition("成功移除监听对象 ")
+                    if chat_value:
+                        chat_name = chat_value.strip()
 
                 # 尝试从DEBUG日志中提取聊天对象名称
                 if not chat_name and "DEBUG" in msg and "成功移除监听对象" in msg:
