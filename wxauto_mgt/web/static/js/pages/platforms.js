@@ -21,7 +21,10 @@ const platformTypeConfigs = {
         { id: 'model', label: '模型', type: 'text', required: true, default: 'gpt-3.5-turbo' },
         { id: 'temperature', label: '温度', type: 'number', required: true, default: 0.7, min: 0, max: 2, step: 0.1 },
         { id: 'system_prompt', label: '系统提示', type: 'textarea', required: false, default: '你是一个有用的助手。' },
-        { id: 'max_tokens', label: '最大令牌数', type: 'number', required: false, default: 1000, min: 1, max: 4096 }
+        { id: 'max_tokens', label: '最大tokens', type: 'number', required: false, default: 1000, min: 1, max: 4096 },
+        { id: 'continuous_conversation', label: '启用连续对话', type: 'checkbox', default: false },
+        { id: 'history_limit', label: '历史记录条数', type: 'number', required: false, default: 6, min: 1, max: 50 },
+        { id: 'summary_prompt', label: '历史精简词条', type: 'textarea', required: false, default: '请将以下对话历史精简为一条要点式总结，保留重要事实、偏好与未完成事项。' }
     ],
     keyword: [
         { id: 'keywords', label: '关键词（多个关键词用逗号分隔）', type: 'textarea', required: true },
@@ -523,7 +526,10 @@ function loadPlatformConfigFields(platformType, configData = {}) {
                 input.type = 'checkbox';
                 input.id = fieldId;
                 input.name = field.id;
-                input.checked = fieldValue === true;
+                input.checked = fieldValue === true
+                    || fieldValue === 1
+                    || fieldValue === '1'
+                    || fieldValue === 'true';
 
                 const checkLabel = document.createElement('label');
                 checkLabel.className = 'form-check-label';
