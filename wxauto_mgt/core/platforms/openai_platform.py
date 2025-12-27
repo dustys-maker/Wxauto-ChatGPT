@@ -91,7 +91,7 @@ class OpenAIPlatform(ServicePlatform):
         if not self._initialized:
             await self.initialize()
             if not self._initialized:
-            return {"error": "平台未初始化"}
+                return {"error": "平台未初始化"}
 
         try:
             # 构建消息历史
