@@ -254,6 +254,24 @@ class AddEditPlatformDialog(QDialog):
         self.openai_max_tokens.setValue(1000)
         openai_layout.addRow("最大令牌数:", self.openai_max_tokens)
 
+        # OpenAI连续对话开关
+        self.openai_continuous_conversation = QCheckBox("启用连续对话")
+        self.openai_continuous_conversation.setToolTip("启用后将保持会话上下文并可使用历史记录")
+        openai_layout.addRow("", self.openai_continuous_conversation)
+
+        # OpenAI历史记录条数
+        self.openai_history_limit = QSpinBox()
+        self.openai_history_limit.setRange(1, 50)
+        self.openai_history_limit.setValue(6)
+        openai_layout.addRow("历史记录条数:", self.openai_history_limit)
+
+        # OpenAI历史精简词条
+        self.openai_summary_prompt = QTextEdit()
+        self.openai_summary_prompt.setPlaceholderText("可选，默认用于历史对话压缩总结")
+        self.openai_summary_prompt.setMaximumHeight(100)
+        self.openai_summary_prompt.setMinimumWidth(300)
+        openai_layout.addRow("历史精简词条:", self.openai_summary_prompt)
+
         self.config_stack.addWidget(self.openai_tab)
 
         # Coze配置选项卡
@@ -899,6 +917,25 @@ class AddEditPlatformDialog(QDialog):
                 except (ValueError, TypeError):
                     max_tokens = 1000
             self.openai_max_tokens.setValue(max_tokens)
+
+            self.openai_continuous_conversation.setChecked(
+                config.get("continuous_conversation", False)
+            )
+
+            history_limit = config.get("history_limit", 6)
+            if isinstance(history_limit, str):
+                try:
+                    history_limit = int(history_limit)
+                except (ValueError, TypeError):
+                    history_limit = 6
+            self.openai_history_limit.setValue(history_limit)
+
+            self.openai_summary_prompt.setPlainText(
+                config.get(
+                    "summary_prompt",
+                    "请将以下对话历史精简为一条要点式总结，保留重要事实、偏好与未完成事项。",
+                )
+            )
         elif platform_type == "keyword" or platform_type == "keyword_match":
             # 加载关键词匹配配置
             self.min_reply_time.setValue(config.get("min_reply_time", 1.0))
@@ -999,6 +1036,10 @@ class AddEditPlatformDialog(QDialog):
                 "temperature": self.openai_temperature.value(),
                 "system_prompt": self.openai_system_prompt.toPlainText().strip() or "你是一个有用的助手。",
                 "max_tokens": self.openai_max_tokens.value(),
+                "continuous_conversation": self.openai_continuous_conversation.isChecked(),
+                "history_limit": self.openai_history_limit.value(),
+                "summary_prompt": self.openai_summary_prompt.toPlainText().strip()
+                or "请将以下对话历史精简为一条要点式总结，保留重要事实、偏好与未完成事项。",
                 "message_send_mode": message_send_mode
             }
         elif platform_type == "keyword":
@@ -1475,5 +1516,4 @@ class AddEditPlatformDialog(QDialog):
         """重置刷新智能体按钮状态"""
         self.refresh_bots_btn.setEnabled(True)
         self.refresh_bots_btn.setText("刷新智能体")
-
 
