@@ -22,10 +22,12 @@ def detect_chat_type(chat_name: Optional[str], sender: Optional[str] = None, sen
     if not chat_name:
         return "unknown"
 
-    if sender and sender != chat_name:
-        return "group"
+    if sender:
+        if sender != chat_name:
+            return "group"
+        return "private"
 
-    if sender_remark and sender_remark != chat_name and sender_remark != sender:
+    if sender_remark and sender_remark != chat_name:
         return "group"
 
     return "private"
