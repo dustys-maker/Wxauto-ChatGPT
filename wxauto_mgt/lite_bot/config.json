@@ -1,0 +1,64 @@
+{
+  "persona": {
+    "global_prompt": "你是一个有用的微信助手。",
+    "private_prompt": null,
+    "group_prompt": "群聊回复尽量简洁。"
+  },
+  "trigger": {
+    "private_mode": "always",
+    "private_keywords": [],
+    "private_regex": null,
+    "group_mode": "mention",
+    "group_keywords": []
+  },
+  "api": {
+    "endpoint": "https://api.openai.com/v1/chat/completions",
+    "api_key_env": "OPENAI_API_KEY",
+    "timeout_seconds": 60,
+    "stream": false,
+    "model": "gpt-4o-mini",
+    "max_output_tokens": 800,
+    "core_params_enabled": {
+      "model": true,
+      "stream": true,
+      "max_tokens": true
+    },
+    "extra_params": {
+      "temperature": 0.7
+    },
+    "extra_params_enabled": {
+      "temperature": true
+    }
+  },
+  "limits": {
+    "token_budget": 4096,
+    "min_reserved_output_tokens": 256,
+    "max_group_output_tokens": 512,
+    "max_private_output_tokens": 800,
+    "max_single_message_tokens": 2048
+  },
+  "storage": {
+    "base_dir": "data/wxauto_lite_bot"
+  },
+  "dedupe": {
+    "window_seconds": 60
+  },
+  "rate_limit": {
+    "session_cooldown_seconds": 3,
+    "user_cooldown_seconds": 2
+  },
+  "failure": {
+    "max_consecutive_failures": 3,
+    "cooldown_seconds": 60,
+    "fallback_reply": "抱歉，我暂时无法回复，请稍后再试。"
+  },
+  "vision": {
+    "enable_private": true,
+    "enable_group": true
+  },
+  "reply": {
+    "private_fixed_reply": null,
+    "group_fixed_reply": null
+  },
+  "self_user_id": null
+}
